@@ -1,0 +1,9 @@
+Package: rethinker
+Type: Package
+Title: RethinkDB client
+Version: 0.0.1
+Author: Miron B. Kursa
+Maintainer: Miron B. Kursa <M.Kursa@icm.edu.pl>
+Description: Simple, native RethinkDB client.
+Imports: rjson
+License: GPL-3
