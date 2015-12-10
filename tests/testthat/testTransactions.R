@@ -1,18 +1,25 @@
-context("Transactions (DB needed)");
+context("Transactions");
 
-openConnection()->J;
-r()$db("test")$tableList()$run(J)->tables;
-if("rethinker_tests"%in%tables)
- r()$db("test")$tableDrop("rethinker_tests")$run(J);
-close(J);
+skipCon<-TRUE;
+try(openConnection(),silent=TRUE)->J;
+if(!inherits(J,"try-error")){
+ #Init DB for testing
+ skipCon<-FALSE;
+ r()$db("test")$tableList()$run(J)->tables;
+ if("rethinker_tests"%in%tables)
+  r()$db("test")$tableDrop("rethinker_tests")$run(J);
+ close(J);
+}
 
 test_that("Connection prints",{
+ if(skipCon) skip("No connection to RethinkDB.");
  J<-openConnection();
  expect_output(print(J),"Opened");
  close(J);
 });
 
 test_that("Make table",{
+ if(skipCon) skip("No connection to RethinkDB.");
  J<-openConnection();
  r()$db("test")$tableCreate("rethinker_tests")$run(J)->ans;
  expect_equal(ans$tables_created,1);
@@ -20,6 +27,7 @@ test_that("Make table",{
 });
 
 test_that("Insert, read and delete an object",{
+ if(skipCon) skip("No connection to RethinkDB.");
  obj<-list(
   id=0,
   a=list(b=1,c=list(ca=LETTERS,cb=letters),d=3:5),
@@ -39,6 +47,7 @@ test_that("Insert, read and delete an object",{
 });
 
 test_that("Bulk insert, cursor",{
+ if(skipCon) skip("No connection to RethinkDB.");
  lapply(1:1000,function(x) list(id=x,tester=77))->tins;
  J<-openConnection();
  expect_equal(
@@ -59,6 +68,7 @@ test_that("Bulk insert, cursor",{
 });
 
 test_that("Cursor emptying",{
+ if(skipCon) skip("No connection to RethinkDB.");
  J<-openConnection();
  r()$db("test")$table("rethinker_tests")$changes()$run(J)->cur;
  expect_output(print(cur),"Active");
@@ -76,6 +86,7 @@ test_that("Cursor emptying",{
 });
 
 test_that("Async queries",{
+ if(skipCon) skip("No connection to RethinkDB.");
  J<-openConnection();
  had<-FALSE;
  r()$db("test")$table("rethinker_tests")$changes()$runAsync(J,function(r){
@@ -91,6 +102,7 @@ test_that("Async queries",{
 })
 
 test_that("Sync-async mix",{
+ if(skipCon) skip("No connection to RethinkDB.");
  J<-openConnection();
  r()$db("test")$table("rethinker_tests")$delete()$run(J);
  asyncCount<-0;
@@ -120,10 +132,57 @@ test_that("Sync-async mix",{
 });
 
 test_that("Profile",{
+ if(skipCon) skip("No connection to RethinkDB.");
  J<-openConnection();
  expect_message(
   r()$db("test")$table("rethinker_tests")$count()$run(J,profile=TRUE),
   "Saved profile");
  expect_true(!is.null(J$lastProfile[[1]]$description));
+ close(J);
+});
+
+test_that("Simple expression",{
+ if(skipCon) skip("No connection to RethinkDB.");
+ J<-openConnection();
+ expect_equal(r()$add(r()$add(1,2),4)$run(J),7);
+ close(J);
+});
+
+test_that("Map-reduce",{
+ if(skipCon) skip("No connection to RethinkDB.");
+ lapply(1:100,function(x) list(id=x,val=list(vall=x)))->tins;
+ J<-openConnection();
+ expect_equal(
+  r()$db("test")$table("rethinker_tests")$insert(tins)$run(J)$inserted,
+  100);
+
+ r()$db("test")$table("rethinker_tests")$map(
+  function(x) x$bracket("val")$bracket("vall")
+ )$reduce(
+  function(l,r) r()$add(l,r)
+ )$run(J)->ans;
+
+ expect_equal(
+  r()$db("test")$table("rethinker_tests")$delete()$run(J)$deleted,
+  100);
+ close(J);
+});
+
+test_that("r() parameters",{
+ if(skipCon) skip("No connection to RethinkDB.");
+ J<-openConnection();
+ expect_equal(
+  r("test","rethinker_tests")$insert(list(id="xyz"))$run(J)$inserted,
+  1);
+ expect_equal(
+  r("test","rethinker_tests")$delete()$run(J)$deleted,
+  1);
+ close(J);
+});
+
+test_that("Expr",{
+ if(skipCon) skip("No connection to RethinkDB.");
+ J<-openConnection();
+ expect_equal(r()$expr(list(a=1,b=2,c=3))$keys()$run(J),c('a','b','c'));
  close(J);
 });

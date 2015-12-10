@@ -24,7 +24,11 @@ enc<-function(com)
 
 coerceDatum<-function(datum){
  #Do not re-process
- if(!notReql(datum)) return(datum);
+ if(!notReql(datum)){
+  if(is.environment(datum))
+   return(setReqlClass(datum$query));
+  return(datum);
+ }
 
  #Drop functions
  if(is.function(datum))
@@ -34,7 +38,7 @@ coerceDatum<-function(datum){
  #Environments -> lists
  if(is.environment(datum)) datum<-as.list(datum);
  #Factors -> character
- if(is.factor(datum)) datum<-setNames(as.character(datum),names(datum));
+ if(is.factor(datum)) datum<-stats::setNames(as.character(datum),names(datum));
  #Named stuff -> lists
  if(!is.null(names(datum))&&!is.list(datum)) datum<-as.list(datum);
 
@@ -50,20 +54,20 @@ coerceDatum<-function(datum){
 
 incorporateTerm<-function(argRaw,id,Q){
  ## Coerce arguments ##
- #TODO: Array-escape vectors hidden deeper in objects
  if(length(argRaw)>0) for(e in 1:length(argRaw)){
   #Functions got executed with reql arguments
   if(inherits(argRaw[[e]],"function")){
    countArgs(argRaw[[e]])->arity;
    if(arity==0)
-    stop("Anonymous functions without parameters are not supported!");
-   body<-do.call(argRaw[[e]],
-    lapply(1:arity,function(e)
-     setReqlClass(list(enc("var"),e))))$query;
+    stop("Anonymous functions without parameters are not supported.");
+   internalArgs<-lapply(1:arity,function(e) r()$var(e));
+   body<-do.call(argRaw[[e]],internalArgs);
+   if(is.environment(body))
+    body<-setReqlClass(body$query);
    argRaw[[e]]<-setReqlClass(list(
     enc("func"),
     list(
-     list(enc("makeArray"),1:arity),
+     list(enc("makeArray"),as.list(1:arity)),
       body
      )
     ));
@@ -106,27 +110,36 @@ funGen<-function(id,Q){
 #' @rdname r
 #' @title ReQL root
 #' @description Creates ReQL root for building a query.
-#' @return ReQL root; use \code{$} (or \code{[[]]}) to chain qury terms (like \code{r()$db("test")$table("test")}).
+#' @param db DB name; this is optional, and is just a syntax sugar for \code{r()$db(db)}.
+#' @param table Table name; this is optional, requires db to be given, and is just a syntax sugar for \code{r()$db(db)$table(table)}
+#' @return ReQL root; use \code{$} (or \code{[[]]}) to chain query terms (like \code{r()$db("test")$table("test")}).
 #' In general, anonymous attributes are passed as attributes while named as term options.
 #' In context of term arguments, named lists are treated as JSON objects (following \code{rjson} package heuristics), unnamed lists and simple vectors as JSON arrays; classes and attributes are ignored.
 #' Term options should be called in the snake case form (for instance \code{return_changes} not \code{returnChanges}), as documented for the original Python driver.
-#' To finalise, use \code{run} or \code{$runAsync}.
-#' For a comprehansive description of all terms, see RethinkDB API refernce; here we give an overview of some of most useful ones:
-#' \item{tableCreate("name")}{Create table of a name "name".}
-#' \item{run(connection,...)}{...}
-#' \item{runAsync(connection,callback,...)}{...}
+#' To finalise, use \code{$run} or \code{$runAsync}.
+#' For a comprehensive description of all terms, see RethinkDB API reference; here we give an overview of some:
+#' \item{run(connection,...)}{Evaluate the query; the function will block until first response from RethinkDB to this query will be received.
+#' May return cursor, an object representing a stream of data on which \code{\link{cursorNext}} and \code{\link{cursorToList}} can be used to extract actual information.
+#' \code{...} may be used to specify run options, like \code{profile}, \code{durability} or \code{read_mode}.}
+#' \item{runAsync(connection,callback,...)}{Evaluate the query; for each datum received \code{x}, run \code{callback(x)}.
+#' Callback should return \code{TRUE} to be re-evaluated on proceeding data; any other response will cause the query to be dropped immediately.
+#' This function returns immediately; to ask R to start evaluating async queries, run \code{\link{drainConnection}}.
+#' Note that callbacks can be also called while \code{$run()} blocks waiting for other query to execute.}
+#' \item{bracket(...)}{Implementation of the JavaScript \code{(...)} and Python \code{[...]} operation.}
+#' \item{funcall(function,atts)}{Implementation of the JavaScript \code{.do()}; note that the order of arguments is different.}
 #' @note ReQL is implemented as an environment, thus is mutable unlike most R objects.
 #' To this end, you can use variables for chaining like this \code{r()->query;} \code{query$db("a");} \code{query$table("b")}; but consequently you can't use variables to make a re-usable stub, i.e., this is invalid: \code{r()->query;} \code{query$db("a")$table("aa")$run(...)} \code{query$db("b")$table("bb")$run(...);}.
 #'
-#' If you get "trying to apply non-functon" error, you likely have misspelled term name or trying to use a non-existent one.
+#' If you get "trying to apply non-function" error, you likely have misspelled term name or trying to use a non-existent one.
 #'
 #' To view raw AST (at any depth), use \code{$query}.
 #' @importFrom rjson toJSON
 #' @author Miron B. Kursa
 #' @export
-r<-function(){
+r<-function(db,table){
  setReqlClass(new.env())->Q;
  Q$query<-NULL;
+
  #Populating reql composing environment with functions
  for(com in names(commCodes))
   Q[[com]]<-funGen(com,Q);
@@ -134,5 +147,23 @@ r<-function(){
   return(syncQuery(connection,toJSON(Q$query),list(...)))
  Q$runAsync<-function(connection,cb,...)
   return(hookQuery(connection,toJSON(Q$query),cb,list(...)));
+ Q$expr<-function(x){
+  if(!is.null(Q$query))
+   stop("$expr only makes sense as a first term.");
+  Q$query<-coerceDatum(x);
+  Q
+ }
+
+ #Applying db and table
+ if(!missing(db)){
+  Q<-Q$db(db);
+  if(!missing(table))
+   Q<-Q$table(table);
+ }else{
+  if(!missing(table))
+   stop("You can't give table without specifying db.");
+ }
+
+ #Done
  Q
 }

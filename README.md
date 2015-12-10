@@ -1,7 +1,7 @@
 # rethinker
 
 Rethinker is a [RethinkDB](http://rethinkdb.com/) driver for [R](https://www.r-project.org/).
-It is currently *work-in-progress*; pretty usable, but mileage may vary.
+It is currently pretty usable, but mileage may vary; the only thing missing from *full-featured* is an auth key support, although documentation and test coverage is still far from perfect.
 
 How to use
 ---------
@@ -20,6 +20,8 @@ cn<-openConnection(host,port)
 
 # Sync query, will just print result
 r()$db("someDb")$table("someTable")$count()$run(cn)
+# ... or just
+r("someDb","someTable")$count()$run(cn)
 
 # Sync query, but will return cursor...
 r()$db("someDb")$table("someTable")$orderBy(list(index='awe'))$run(cn)->cr

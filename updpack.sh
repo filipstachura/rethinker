@@ -5,6 +5,8 @@ rm -rf rethinker
 rm rethinker_*.tar.gz
 mkdir rethinker
 cp -r R rethinker/.
+cp -r tests rethinker/.
+rm rethinker/tests/testthat/testTransactions.R
 cp DESCRIPTION rethinker/.
 
 

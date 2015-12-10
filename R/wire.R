@@ -77,7 +77,7 @@ isOpened<-function(x){
 #' @param x Connection to print.
 #' @param ... Ignored.
 #' @method print RethinkDB_connection
-#' @note Never blocks; also checks whether the underlying connection is alive.
+#' @note Never blocks.
 #' @export
 print.RethinkDB_connection<-function(x,...){
  opened<-ifelse(isOpened(x),"Opened","Lost");
@@ -113,14 +113,13 @@ sendQuery<-function(x,type,query,token,options){
  stopifnot(inherits(x,"RethinkDB_connection"));
 
  if(missing(token))
-  token<-as.integer(floor(runif(1)*2^31));
+  token<-as.integer(floor(stats::runif(1)*2^31));
 
  if(nchar(query)>0){
   if(missing(options)||(length(options)==0)){
    query<-sprintf("[%s,%s]",type,query);
   }else{
    query<-sprintf("[%s,%s,%s]",type,query,rjson::toJSON(options));
-   print(query);
   }
  }else{
   query<-sprintf("[%s]",type);
@@ -232,7 +231,7 @@ syncQuery<-function(x,query,options){
 #' Drains a given RethinkDB connection, i.e. pull query responses and both call their associated callbacks (for async queries) and/or filling sync cursor local cache.
 #' Draining ends when all async queries end; the function blocks for the entire time this is happening.
 #'
-#' The async query callback will only fire during \code{drainConnection} or (opportunistically) \code{\link{cursorNext}}; consequently this function must be run to gurantee that installed callbacks will have a chance to fire.
+#' The async query callback will only fire during \code{drainConnection} or (opportunistically) \code{\link{cursorNext}}; consequently this function must be run to guarantee that installed callbacks will have a chance to fire.
 #'
 #' @param x Connection to drain.
 #' @export
