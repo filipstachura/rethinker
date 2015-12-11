@@ -1,4 +1,4 @@
-# rethinker
+# rethinker [![CRAN downloads](http://cranlogs.r-pkg.org/badges/rethinker)](https://cran.r-project.org/web/packages/rethinker/index.html)
 
 Rethinker is a [RethinkDB](http://rethinkdb.com/) driver for [R](https://www.r-project.org/).
 It is currently pretty usable, but mileage may vary; the only thing missing from *full-featured* is an auth key support, although documentation and test coverage is still far from perfect.
@@ -6,8 +6,13 @@ It is currently pretty usable, but mileage may vary; the only thing missing from
 How to use
 ---------
 
-It is a devel version, and it is still not on CRAN; to this end you must compile the package yourself.
-Fire `updpak.sh` and then execute `R CMD INSTALL rethinker_x.y.z.tar.gz`.
+The easiest way is to install from [CRAN](https://cran.r-project.org/web/packages/rethinker/index.html), i.e.,
+
+```r
+install.packages('rethinker')
+```
+
+To build from source, fire `updpak.sh` and then execute `R CMD INSTALL rethinker_x.y.z.tar.gz`.
 This will build `roxygen2` documentation and fire `testthat2` tests (both of those packages, as well as `devtools`, should be installed; note that `devtools::install_github` will not work).
 
 Auto-executed tests expect a RethinkDB install active under localhost, in which they will make mess; to disallow, remove `tests/testthat/testTransactions.R`.
