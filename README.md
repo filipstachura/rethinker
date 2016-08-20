@@ -12,10 +12,7 @@ The easiest way is to install from [CRAN](https://cran.r-project.org/web/package
 install.packages('rethinker')
 ```
 
-To build from source, fire `updpak.sh` and then execute `R CMD INSTALL rethinker_x.y.z.tar.gz`.
-This will build `roxygen2` documentation and fire `testthat2` tests (both of those packages, as well as `devtools`, should be installed; note that `devtools::install_github` will not work).
-
-Auto-executed tests expect a RethinkDB install active under localhost, in which they will make mess; to disallow, remove `tests/testthat/testTransactions.R`.
+To install from source, use `devtools::install_github`.
 
 Basically, it works like this:
 

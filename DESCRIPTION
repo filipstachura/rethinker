@@ -6,6 +6,10 @@ Author: Miron B. Kursa
 Maintainer: Miron B. Kursa <M.Kursa@icm.edu.pl>
 Description: Simple, native RethinkDB client.
 URL: https://github.com/mbq/rethinker
-Suggests: testthat
-Imports: rjson
+BugReports: https://github.com/mbq/rethinker/issues
+Suggests:
+    testthat
+Imports:
+    rjson
 License: GPL-3
+RoxygenNote: 5.0.1
