@@ -1,7 +1,7 @@
 # rethinker [![CRAN downloads](http://cranlogs.r-pkg.org/badges/rethinker)](https://cran.r-project.org/web/packages/rethinker/index.html)
 
 Rethinker is a [RethinkDB](http://rethinkdb.com/) driver for [R](https://www.r-project.org/).
-It is currently pretty usable, but mileage may vary; the only thing missing from *full-featured* is an auth key support, although documentation and test coverage is still far from perfect.
+It is currently pretty usable, but mileage may vary.
 
 How to use
 ---------
@@ -11,9 +11,6 @@ The easiest way is to install from [CRAN](https://cran.r-project.org/web/package
 ```r
 install.packages('rethinker')
 ```
-
-To build from source, use the standard R build or devtools; for tests, use `devtools::test()`.
-Note that tests expect a RethinkDB install active under localhost, with a db called `test`, in which they will make mess; to disallow, remove `tests/testthat/testTransactions.R`.
 
 Basically, it works like this:
 

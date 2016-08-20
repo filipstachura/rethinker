@@ -4,48 +4,79 @@
 #'
 #' @param host Host to connect to.
 #' @param port Port to connect to.
-#' @param authKey Authentication key. Not supported yet.
+#' @param user Username; only for \code{v} equal \code{"V1_0"}.
+#' @param password Password; only for \code{v} equal \code{"V1_0"}.
 #' @param v Protocol version; \code{"V0_3"} and \code{"V0_4"} supported, the default should be used.
 #' @return Object of a class \code{RethinkDB_connection}, which can be passed to \code{r()$...$run} and \code{r()$...$runAsync} functions.
 #' @export
-openConnection<-function(host='localhost',port=28015,authKey=NULL,v="V0_4"){
- JSON<-0x7e6970c7
- V0_3<-0x5f75e83e
- V0_4<-0x400c2d20
-
- if(!is.null(authKey))
-  stop("Auth key not supported yet!");
-
- header<-NULL;
- if(identical(v,"V0_3")){
-  header<-c(V0_3,0L,JSON);
- }
- if(identical(v,"V0_4")){
-  header<-c(V0_4,0L,JSON);
- }
- if(is.null(header)) stop(sprintf("Unknown protocol version %s!",v));
+openConnection<-function(host='localhost',port=28015,v="V0_4",user="admin",password=""){
+ JSON<-0x7e6970c7L
+ V0_3<-0x5f75e83eL
+ V0_4<-0x400c2d20L
+ V1_0<-0x34c2bdc3L
 
  #Open connection; R will throw error in case of trouble here
  socketConnection(host,port,
   open='w+b',blocking=TRUE)->con;
 
- #Send handshake
- writeBin(as.integer(header),con,size=4,endian='little');
+ if(identical(v,"V1_0")){
+  if(!requireNamespace("openssl",quietly=TRUE)){
+   stop("V1_0 interface requires the openssl package.")
+  }
 
- while(TRUE){
-  response<-readBin(con,character(),1);
-  if(length(response)>0) break;
+  #Send handshake
+  writeBin(as.integer(V1_0),con,size=4,endian="little");
+
+  #Pull response; either a JSON or error string
+  while(TRUE){
+   response<-readBin(con,character(),1);
+   if(length(response)>0) break;
+  }
+  try(rjson::fromJSON(response),silent=TRUE)->rParsed;
+  if(inherits(rParsed,"try-error")||is.null(rParsed$success)||!rParsed$success)
+   stop(sprintf("Handshake ended in error: %s",response));
+  if(rParsed$min_protocol_version>0)
+   stop("This client is too old for your RethinkDB version.");
+  haveVer<-V1_0;
+
+  #TODO: doScrumSha256()
+  stop("V1_0 is not yet supported.");
+ }else{
+  header<-NULL;
+  if(identical(v,"V0_3")){
+   header<-c(V0_3,
+    as.integer(nchar(password)),
+    utf8ToInt(password),
+    JSON);
+  }
+  if(identical(v,"V0_4")){
+   header<-c(V0_4,
+    as.integer(nchar(password)),
+    utf8ToInt(password),
+    JSON);
+  }
+  if(is.null(header)) stop(sprintf("Unknown protocol version %s!",v));
+  gotVer<-header[1];
+
+  #Send handshake
+  writeBin(as.integer(header),con,size=4,endian='little');
+
+  #Pull response; should be, literally, "SUCCESS"
+  while(TRUE){
+   response<-readBin(con,character(),1);
+   if(length(response)>0) break;
+  }
+  if(!identical(response,"SUCCESS"))
+   stop(sprintf(
+    "Could not establish connection with RethinkDB server.\nIt says: %s",
+    response));
  }
- if(!identical(response,"SUCCESS"))
-  stop(sprintf(
-   "Could not establish connection with RethinkDB server.\nIt says: %s",
-   response));
 
  ans<-new.env();
  ans$con<-con;
  ans$host<-host;
  ans$port<-port;
- ans$ver<-header[1];
+ ans$ver<-gotVer;
  ans$handlers<-list();
  class(ans)<-"RethinkDB_connection";
  ans
