@@ -53,7 +53,7 @@ r()$db("someDb")$table("someTable")$insert(
  ),
  conflict="update",
  return_changes=TRUE
-)$run(cr)
+)$run(cn)
 
 # Brackets are replaced by $bracket(), do by $funcall(function,atts)
 ```
