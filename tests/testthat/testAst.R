@@ -30,3 +30,7 @@ test_that("Expressions",{
  Q<-r()$add(r()$add(1,2),4)$query;
  expect_identical(toJSON(Q),"[24,[[24,[1,2]],4]]");
 })
+
+test_that("Implicit var throws",{
+ expect_error(r()$row("a"),"Implicit")
+})

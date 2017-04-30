@@ -143,6 +143,8 @@ r<-function(db,table){
  #Populating reql composing environment with functions
  for(com in names(commCodes))
   Q[[com]]<-funGen(com,Q);
+ Q$row<-function(...)
+  stop("Implicit var (row) is not supported by rethinker; use an actual anonymous function.")
  Q$run<-function(connection,...)
   return(syncQuery(connection,toJSON(Q$query),list(...)))
  Q$runAsync<-function(connection,cb,...)
