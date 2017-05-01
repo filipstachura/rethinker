@@ -9,3 +9,4 @@ URL: https://github.com/mbq/rethinker
 Suggests: testthat
 Imports: rjson
 License: GPL-3
+RoxygenNote: 6.0.1
