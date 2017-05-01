@@ -133,7 +133,6 @@ funGen<-function(id,Q){
 #' If you get "trying to apply non-function" error, you likely have misspelled term name or trying to use a non-existent one.
 #'
 #' To view raw AST (at any depth), use \code{$query}.
-#' @importFrom rjson toJSON
 #' @author Miron B. Kursa
 #' @export
 r<-function(db,table){
@@ -146,9 +145,9 @@ r<-function(db,table){
  Q$row<-function(...)
   stop("Implicit var (row) is not supported by rethinker; use an actual anonymous function.")
  Q$run<-function(connection,...)
-  return(syncQuery(connection,toJSON(Q$query),list(...)))
+  return(syncQuery(connection,rjson::toJSON(Q$query),list(...)))
  Q$runAsync<-function(connection,cb,...)
-  return(hookQuery(connection,toJSON(Q$query),cb,list(...)));
+  return(hookQuery(connection,rjson::toJSON(Q$query),cb,list(...)));
  Q$expr<-function(x){
   if(!is.null(Q$query))
    stop("$expr only makes sense as a first term.");
