@@ -32,5 +32,17 @@ test_that("Expressions",{
 })
 
 test_that("Implicit var throws",{
- expect_error(r()$row("a"),"Implicit")
+ expect_error(r()$row("a"),"Implicit");
+})
+
+test_that("Complex list nesting maps as it should",{
+ Q1<-r()$insert(list(a=list(list(a=3))))$query
+ expect_identical(toJSON(Q1),"[56,[{\"a\":[2,[{\"a\":3}]]}]]")
+ Q2<-r()$insert(list(a=list(list(a=list(r()$monday())))))$query
+ expect_identical(toJSON(Q2),"[56,[{\"a\":[2,[{\"a\":[2,[[107,[]]]]}]]}]]")
+})
+
+test_that("Single element list is an array",{
+ Q<-r()$insert(list(777))$query;
+ expect_identical(toJSON(Q),"[56,[[2,[777]]]]");
 })
