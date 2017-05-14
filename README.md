@@ -1,7 +1,8 @@
 # rethinker [![CRAN downloads](http://cranlogs.r-pkg.org/badges/rethinker)](https://cran.r-project.org/web/packages/rethinker/index.html)
 
 Rethinker is a [RethinkDB](http://rethinkdb.com/) driver for [R](https://www.r-project.org/).
-It is currently pretty usable, but mileage may vary; the only thing missing from *full-featured* is an auth key support, although documentation and test coverage is still far from perfect.
+It is currently pretty usable, but mileage may vary; the main thing missing is the support for encryption connections, auth keys and v1.0 wire protocol.
+All those things boil down to the fact that R has no support for cryptographic primitives nor for wrapping connections into TLS.
 
 How to use
 ---------
@@ -12,9 +13,9 @@ The easiest way is to install from [CRAN](https://cran.r-project.org/web/package
 install.packages('rethinker')
 ```
 
-To install from source, use `devtools::install_github`.
+To build from source, [see the devel branch](https://github.com/mbq/rethinker/tree/devel).
 
-Basically, it works like this:
+Basically, the client works like this:
 
 ```r
 library(rethinker)
@@ -56,4 +57,6 @@ r()$db("someDb")$table("someTable")$insert(
 )$run(cn)
 
 # Brackets are replaced by $bracket(), do by $funcall(function,atts)
+# Implicit var ("row") is not available; R anonymous functions are quite short and easy, there is no
+#  need for additional syntax sugar.
 ```
