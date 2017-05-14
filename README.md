@@ -54,7 +54,7 @@ r()$db("someDb")$table("someTable")$insert(
  ),
  conflict="update",
  return_changes=TRUE
-)$run(cr)
+)$run(cn)
 
 # Brackets are replaced by $bracket(), do by $funcall(function,atts)
 # Implicit var ("row") is not available; R anonymous functions are quite short and easy, there is no
