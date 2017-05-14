@@ -23,18 +23,17 @@ enc<-function(com)
  return(as.numeric(commCodes[com]))
 
 coerceDatum<-function(datum){
- #Do not re-process
+ ## Do not process what is already done
  if(!notReql(datum)){
   if(is.environment(datum))
    return(setReqlClass(datum$query));
   return(datum);
  }
 
+ ## Fix JSON-unfriendly stuff
  #Drop functions
  if(is.function(datum))
-  stop("Functions can only exist as direct term arguments.")
-
- #Coerce JSON-unfriendly stuff
+ stop("Functions can only exist as direct term arguments.")
  #Environments -> lists
  if(is.environment(datum)) datum<-as.list(datum);
  #Factors -> character
@@ -42,13 +41,18 @@ coerceDatum<-function(datum){
  #Named stuff -> lists
  if(!is.null(names(datum))&&!is.list(datum)) datum<-as.list(datum);
 
- #Named lists -> map coerceData and return
+ ## Drill down lists
+ if(is.list(datum))
+  datum<-lapply(datum,coerceDatum);
+
+ ## Return time
+ #Named lists -> those shall be objects, just return
  if(is.list(datum)&&!is.null(names(datum)))
-  return(setReqlClass(lapply(datum,coerceDatum)));
- #Un-named stuff with length>1 -> makeArray of elements
- if(length(datum)>1)
+  return(setReqlClass(datum));
+ #Un-named stuff with length>1 or a list -> makeArray of elements
+ if(length(datum)>1||is.list(datum))
   return(setReqlClass(list(enc("makeArray"),datum)));
- #Single-element vector... scalar!
+ #Single-element vector... scalar
  return(setReqlClass(datum));
 }
 
