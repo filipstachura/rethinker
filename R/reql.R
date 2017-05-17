@@ -16,17 +16,29 @@ setReqlClass<-function(x){
  class(x)<-"reql"; x
 }
 
-notReql<-function(x)
- !inherits(x,"reql");
+lockBaseQuery<-function(x){
+ x$baseQuery<-x$query;
+ return(x)
+}
+
+isReql<-function(x)
+ inherits(x,"reql");
 
 enc<-function(com)
  return(as.numeric(commCodes[com]))
 
 coerceDatum<-function(datum){
  ## Do not process what is already done
- if(!notReql(datum)){
-  if(is.environment(datum))
-   return(setReqlClass(datum$query));
+ if(isReql(datum)){
+  if(is.environment(datum)){
+   #Here, we collapse a reql tree into a query;
+   ans<-setReqlClass(datum$query);
+   # but this means reql tree is useless, so we can trim it to root,
+   # in order to make it re-usable (useful when it is r()$var(..))
+   datum$query<-datum$baseQuery;
+   return(ans);
+
+  }
   return(datum);
  }
 
@@ -64,7 +76,7 @@ incorporateTerm<-function(argRaw,id,Q){
    countArgs(argRaw[[e]])->arity;
    if(arity==0)
     stop("Anonymous functions without parameters are not supported.");
-   internalArgs<-lapply(1:arity,function(e) r()$var(e));
+   internalArgs<-lapply(1:arity,function(e) lockBaseQuery(r()$var(e)));
    body<-do.call(argRaw[[e]],internalArgs);
    if(is.environment(body))
     body<-setReqlClass(body$query);
@@ -142,6 +154,7 @@ funGen<-function(id,Q){
 r<-function(db,table){
  setReqlClass(new.env())->Q;
  Q$query<-NULL;
+ Q$baseQuery<-NULL;
 
  #Populating reql composing environment with functions
  for(com in names(commCodes))
