@@ -212,6 +212,39 @@ test_that("r() parameters",{
  close(J);
 });
 
+test_that("complex filter with ",{
+ J<-openConnection(port=port);
+ lapply(1:10,function(x) list(id=letters[x],val=x))->stuff;
+ expect_equal(
+  r()$db("test")$
+   table("rethinker_tests")$
+   insert(stuff)$run(J)$inserted,
+  10);
+  expect_equal(
+  r("test","rethinker_tests")$
+   filter(
+    function(x) r()$le(x$bracket("val"),5)
+   )$count()$run(J)
+  ,
+  5
+ );
+ expect_equal(
+ r("test","rethinker_tests")$
+  filter(
+   function(x) r()$and(
+    r()$le(x$bracket("val"),5),
+    r()$ge(x$bracket("val"),5),
+    r()$ge(x$bracket("val"),2))
+  )$count()$run(J)
+  ,
+  1
+ );
+ expect_equal(
+  r("test","rethinker_tests")$delete()$run(J)$deleted,
+  10);
+ close(J);
+});
+
 test_that("Expr",{
  J<-openConnection(port=port);
  expect_equal(r()$expr(list(a=1,b=2,c=3))$keys()$run(J),c('a','b','c'));
