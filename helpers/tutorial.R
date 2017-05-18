@@ -42,7 +42,7 @@ r("rethinker_test","A")$insert(
   list(id="c",number=-3)
  )
 )$run(cn)
-# ... or use JSON (which may be faster for complex objects)
+# ... or use JSON strings (which may be faster for complex objects)
 r("rethinker_test","A")$insert(
  r()$json('{"id":"d","number":49}')
 )$run(cn)
@@ -57,11 +57,19 @@ r("rethinker_test","A")$update(
 )$run(cn)->ans
 stopifnot(identical(ans$replaced,1))
 
-# x$bracket('number')$gt(20)
 # Filter; note that one HAS TO use ReQL operations only
 r("rethinker_test","A")$filter(
- function(x) r()$and(x$bracket('number')$lt(30),TRUE)
+ function(x) r()$and(
+  x$bracket('number')$lt(30),
+  x$bracket('number')$gt(0)
+ )
 )$run(cn)->ansX
+#Heh, we got an object sequence; this may be very long
+# hence we get a cursor rather than data.
+print(ansX)
+#For now, we will just dump it into a list
+ansX<-cursorToList(ansX)
+str(ansX)
 
 r("rethinker_test","A")$filter(
  function(x) x$bracket('number')$lt(30)$and(TRUE)
