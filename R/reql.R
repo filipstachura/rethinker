@@ -28,6 +28,12 @@ enc<-function(com)
  return(as.numeric(commCodes[com]))
 
 coerceDatum<-function(datum){
+ if(inherits(datum,"call")){
+  stop("Datum is a call!")
+ }
+ if(inherits(datum,"pairlist")){
+  stop("Datum is a pairlist!")
+ }
  ## Do not process what is already done
  if(isReql(datum)){
   if(is.environment(datum)){
@@ -69,15 +75,20 @@ coerceDatum<-function(datum){
 }
 
 incorporateTerm<-function(argRaw,id,Q){
+ #Convert NULL argRaw meaning argless-function into list()
+ if(is.null(argRaw)) argRaw<-list()
+
  ## Coerce arguments ##
  if(length(argRaw)>0) for(e in 1:length(argRaw)){
+  #Evalute it now, not before
+  thisArg<-eval(argRaw[[e]],envir=parent.frame(2),enclos=parent.frame(3));
   #Functions got executed with reql arguments
-  if(inherits(argRaw[[e]],"function")){
-   countArgs(argRaw[[e]])->arity;
+  if(inherits(thisArg,"function")){
+   countArgs(thisArg)->arity;
    if(arity==0)
     stop("Anonymous functions without parameters are not supported.");
    internalArgs<-lapply(1:arity,function(e) lockBaseQuery(r()$var(e)));
-   body<-do.call(argRaw[[e]],internalArgs);
+   body<-do.call(thisArg,internalArgs);
    if(is.environment(body))
     body<-setReqlClass(body$query);
    argRaw[[e]]<-setReqlClass(list(
@@ -87,11 +98,13 @@ incorporateTerm<-function(argRaw,id,Q){
       body
      )
     ));
+  }else{
+   #Static objects get coerced and makeArray-ied when needed
+   argRaw[[e]]<-coerceDatum(thisArg);
   }
-  #Static objects get coerced and makeArray-ied when needed
-  argRaw[[e]]<-coerceDatum(argRaw[[e]]);
  }
 
+ #Following operations will finally kill argRaw pairlist structure
  if(!is.null(names(argRaw))){
   #Some options must be extracted
   argRaw[nchar(names(argRaw))>0]->argOpts;
@@ -116,7 +129,8 @@ incorporateTerm<-function(argRaw,id,Q){
 funGen<-function(id,Q){
  id<-force(id);
  function(...){
-  argRaw<-list(...);
+  #This will be used to manipulate with R eval order
+  argRaw<-match.call(expand.dots=FALSE)$...;
   incorporateTerm(argRaw,id,Q);
   Q;
  }
@@ -174,9 +188,9 @@ r<-function(db,table){
 
  #Applying db and table
  if(!missing(db)){
-  Q<-Q$db(db);
+  Q<-Q$db(force(db));
   if(!missing(table))
-   Q<-Q$table(table);
+   Q<-Q$table(force(table));
  }else{
   if(!missing(table))
    stop("You can't give table without specifying db.");
