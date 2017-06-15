@@ -74,7 +74,7 @@ r("rethinker_test","A")$insert(
 )$run(cn)->ans
 ```
 
-Conversion follows [rjson](https://cran.r-project.org/web/packages/rjson/index.html) conventions (by actually using rjson for that purpose), i.e. unnamed lists and vectors turn into arrays, named lists into objects, and 1-element vectors into scalars.
+Conversion follows [rjson](https://CRAN.R-project.org/package=rjson) conventions (by actually using rjson for that purpose), i.e. unnamed lists and vectors turn into arrays, named lists into objects, and 1-element vectors into scalars.
 
 Anyway, as an answer, we get a typical RethinkDB object describing changes given query caused;
 
@@ -202,7 +202,7 @@ message("Drain connection exits.")
 }
 ```
 
-This concludes this brief tutorial; for more information, it is best to consult the [RethinkDB documentation](https://rethinkdb.com/docs/) and the [rethinker manual](https://cran.r-project.org/web/packages/rethinker/rethinker.pdf).
+This concludes this brief tutorial; for more information, it is best to consult the [RethinkDB documentation](https://rethinkdb.com/docs/) and the rethinker manual.
 Bug reports, feature requests and pull requests are welcome on [GitHub](https://github.com/mbq/rethinker).
 
 Still, we have to clean up.
