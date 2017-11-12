@@ -128,9 +128,9 @@ funGen<-function(id,Q){
 }
 
 
-#' @rdname r
-#' @title ReQL root
-#' @description Creates ReQL root for building a query.
+#' ReQL root
+#'
+#' Creates ReQL root for building a query.
 #' @param db DB name; this is optional, and is just a syntax sugar for \code{r()$db(db)}.
 #' @param table Table name; this is optional, requires db to be given, and is just a syntax sugar for \code{r()$db(db)$table(table)}
 #' @return ReQL root; use \code{$} (or \code{[[]]}) to chain query terms (like \code{r()$db("test")$table("test")}).
