@@ -2,3 +2,5 @@ tests/
 helpers/
 .git/
 README.md
+.travis.yml
+
