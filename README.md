@@ -1,4 +1,4 @@
-# rethinker [![CRAN downloads](http://cranlogs.r-pkg.org/badges/rethinker)](https://cran.r-project.org/web/packages/rethinker/index.html)
+# rethinker [![CRAN downloads](http://cranlogs.r-pkg.org/badges/rethinker)](https://cran.r-project.org/web/packages/rethinker/index.html) [![Build Status](https://travis-ci.org/mbq/rethinker.svg?branch=master)](https://travis-ci.org/mbq/rethinker) [![Build Status](https://travis-ci.org/mbq/rethinker.svg?branch=devel)](https://travis-ci.org/mbq/rethinker)
 
 Rethinker is a [RethinkDB](http://rethinkdb.com/) driver for [R](https://www.r-project.org/).
 It is currently pretty usable, but mileage may vary; the main thing missing is the support for encryption connections, auth keys and v1.0 wire protocol.
