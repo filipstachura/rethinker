@@ -27,7 +27,7 @@ openConnection<-function(host='localhost',port=28015,authKey=NULL,v="V0_4"){
 
  #Open connection; R will throw error in case of trouble here
  socketConnection(host,port,
-  open='w+b',blocking=TRUE)->con;
+  open='w+b',blocking=FALSE)->con;
 
  #Send handshake
  writeBin(as.integer(header),con,size=4,endian='little');
@@ -134,14 +134,34 @@ sendQuery<-function(x,type,query,token,options){
  return(token);
 }
 
-fetchResponseRaw<-function(x,syncToken){
+fetchResponseRaw<-function(x,syncToken, blocking = TRUE){
  stopifnot(inherits(x,"RethinkDB_connection"));
 
- token<-readBin(x$con,integer(),size=8);
- if(length(token)==0){
-  Sys.sleep(1);
-  return(x);
+ print(sprintf("Blocking %d", blocking))
+  if (blocking) {
+   token<-readBin(x$con,integer(),size=8);
+   print(token)
+   if(length(token)==0){
+    Sys.sleep(1);
+    return(x);
+   }
+ } else {
+   print("reading token")
+    out <- socketSelect(list(x$con), write = FALSE, timeout = 10)
+    print('after select')
+    print(out)
+    if (out) {
+      token<-readBin(x$con,integer(),size=8);
+      print(token)
+      if(length(token)==0){
+       return(x);
+      }
+    } else {
+     return(x);
+    }
  }
+
+
  len<-readBin(x$con,integer(),size=4);
  U<-readBin(x$con,raw(),size=1,n=len);
  stuff<-rjson::fromJSON(readBin(U,character()));
@@ -244,4 +264,14 @@ drainConnection<-function(x){
   }
  }
  return(invisible(NULL));
+}
+
+#' @export
+checkConnection<-function(x){
+  if (length(x$handlers) > 0) {
+    if (rethinker::isOpened(x)) {
+      response <- fetchResponseRaw(x, blocking = FALSE)
+      response
+    }
+  }
 }

@@ -30,6 +30,7 @@ cursorNext<-function(cursor,inBatch=FALSE){
   sendQuery(cursor$con,CONTINUE,'',cursor$token);
   while(TRUE){
    fetchResponseRaw(cursor$con,cursor$token)->ans;
+   if(is.null(ans)) sleep(1);
    if(is.null(ans)) next;
    break;
   }
